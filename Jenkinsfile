@@ -1,36 +1,90 @@
 pipeline {
     agent any
-    tools {
-        maven "MAVEN3"
-        jdk "OracleJDK8"
+    stages {
+        stage('Git Checkout') {
+            steps {
+                // Check out the source code from a Git repository
+                git branch: 'main', url: 'https://github.com/nahidkishore/CICD_with_Jenkins_Nexus_SonarQube_Slack.git'
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                // Run unit tests using Maven
+                sh 'mvn test'
+            }
+        }
+        stage('Integrated Testing') {
+            steps {
+                // Run integrated tests using Maven, skipping unit tests
+                sh 'mvn verify -DskipUnitTests'
+            }
+        }
+        stage('Maven Build'){
+            steps{
+                sh 'mvn clean install'
+            }
+        }
+        
+     /*    stage('Static Code Analysis') {
+      environment {
+        SONAR_URL = "http://54.210.183.220:9000"
+      }
+      steps {
+        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+          sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
+        }
+      }
+    } */
+    // nexus 
+    
+ /*      stage('Upload Jar to Nexus'){
+    steps{
+        script{
+            def readPomVersion = readMavenPom file: 'pom.xml'
+            nexusArtifactUploader artifacts: [
+                [artifactId: 'springboot', classifier: '', file: 'target/Uber.jar', type: 'jar']
+            ],
+            credentialsId: 'nexus-auth', 
+            groupId: 'com.example', 
+            nexusUrl: '54.83.103.209:8081', // Corrected URL
+            nexusVersion: 'nexus3', 
+            protocol: 'http', 
+            repository: 'demoapp-release', 
+            version: "${readPomVersion.version}"
+        }
     }
+} */
+//
+/* 
+        stage('Docker File Build and Test'){
+
+     steps {
+                sh 'docker build . -t cicd-nexus-sonarqube'
+            }
+
+   } */
+
+// 
+
+/* stage("Push to Docker Hub"){
+               steps{
+                   
+                echo 'login into docker hub and pushing image....'
+                withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]){
+ 
+sh "docker tag cicd-nexus-sonarqube ${env.dockerHubUser}/cicd-nexus-sonarqube:latest"
 
 
-environment {
-    SNAP_REPO = 'vprofile-snapshot'
-    NEXUS_USER = 'admin'
-    NEXUS_PASS = 'admin'
-    RELEASE_REPO = 'vprofile-release'
-    CENTRAL_REPO = 'vpro-maven-central'
-    NEXUS_IP = '54.204.76.81' // Define NEXUS_IP here
-    NEXUS_PORT = '8081'
-    NEXUS_GRP_REPO = 'vpro-maven-group'
-    NEXUS_LOGIN = 'nexuslogin'
-}
+  sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
+                     
+                    sh "docker push ${env.dockerHubUser}/cicd-nexus-sonarqube:latest"
 
 
-   stages {
-    stage('Build'){
-              steps {
-                  sh 'mvn -s settings.xml -DskipTests install'
-              }
-              post {
-                  success {
-                      echo "Now Archiving."
-                      archiveArtifacts artifacts: '**/*.war'
-                  }
-              }
-          }
+               }
+           }
+         } */
 
-}
+  
+
+    }
 }
